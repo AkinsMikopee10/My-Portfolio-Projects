@@ -14,7 +14,7 @@ const Header = () => {
   return (
     <header className="glass-card p-4 flex justify-between items-center">
       {/* Logo + Title */}
-      <div className=" flex items-center gap-3">
+      <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-white/30 border border-white/40 flex items-center justify-center">
           {/* Simple dot logo for now (unique minimal vibe) */}
           <div className="w-3 h-3 rounded-full bg-white/90" />
@@ -23,7 +23,7 @@ const Header = () => {
       </div>
 
       {/* Right side: date + placeholder for theme toggle */}
-      <div className=" flex items-center gap-3">
+      <div className="flex items-center gap-3">
         <p className="text-white/90">{today}</p>
         {/* Placeholder toggle (we’ll replace with Lucide icon later) */}
         <button
