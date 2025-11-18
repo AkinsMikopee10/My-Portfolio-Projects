@@ -1,17 +1,23 @@
 const DashboardGrid = () => {
   return (
-    <main>
-      <div>
-        <h2>Today's Tasks</h2>
-        <div>No tasks yet. Add one soon!</div>
+    <main className="flex-1 p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="bg-white rounded-xl shadow-sm p-4 col-span-2">
+        <h2 className="text-lg font-semibold text-gray-800 mb-3">
+          Today's Tasks
+        </h2>
+        <div className="text-gray-500">No tasks yet. Add one soon!</div>
       </div>
-      <div>
-        <h2>Focus Timer</h2>
-        <div>Ready to focus?</div>
+      <div className="bg-white rounded-xl shadow-sm p-4">
+        <h2 className="text-lg font-semibold text-gray-800 mb-3">
+          Focus Timer
+        </h2>
+        <div className="text-gray-500">Ready to focus?</div>
       </div>
-      <div>
-        <h2>Stats Overview</h2>
-        <div>No stats yet.</div>
+      <div className="bg-white rounded-xl shadow-sm p-4 col-span-3">
+        <h2 className="text-lg font-semibold text-gray-800 mb-3">
+          Stats Overview
+        </h2>
+        <div className="text-gray-500">No stats yet.</div>
       </div>
     </main>
   );
