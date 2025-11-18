@@ -9,30 +9,16 @@ const DashboardGrid = () => {
 
   // Sync completed tasks count from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem("zenspace-tasks");
-    if (saved) {
-      const tasks = JSON.parse(saved);
+    const savedTasks = localStorage.getItem("zenspace-tasks");
+    if (savedTasks) {
+      const tasks = JSON.parse(savedTasks);
       const done = tasks.filter((t) => t.completed).length;
       setCompletedTasks(done);
     }
+    const savedFocus = localStorage.getItem("zenspace-focus-minutes");
+    if (savedFocus) setFocusMinutes(parseInt(savedFocus));
   }, []);
 
-  // Listen for localStorage updates (when tasks change)
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const saved = localStorage.getItem("zenspace-tasks");
-      if (saved) {
-        const tasks = JSON.parse(saved);
-        const done = tasks.filter((t) => t.completed).length;
-        setCompletedTasks(done);
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
-
-  // Function to update focus minutes (will be passed to FocusTimer)
   const handleFocusEnd = (minutesFocused) => {
     const newTotal = focusMinutes + minutesFocused;
     setFocusMinutes(newTotal);
@@ -40,8 +26,8 @@ const DashboardGrid = () => {
   };
 
   return (
-    <main className="flex-1 p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <TaskList />
+    <main className="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <TaskList setCompletedTasks={setCompletedTasks} />
 
       <FocusTimer onSessionEnd={handleFocusEnd} />
 

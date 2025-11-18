@@ -2,24 +2,33 @@ import { useState, useEffect } from "react";
 import TaskItem from "./TaskItem";
 import { motion } from "framer-motion";
 
-const TaskList = () => {
+const TaskList = ({ setCompletedTasks }) => {
   const [tasks, setTasks] = useState(() => {
     const saved = localStorage.getItem("zenspace-tasks");
     return saved ? JSON.parse(saved) : [];
   });
+
   const [input, setInput] = useState("");
 
   useEffect(() => {
     localStorage.setItem("zenspace-tasks", JSON.stringify(tasks));
-  }, [tasks]);
+
+    // Update completed task count in dashboard
+    if (setCompletedTasks) {
+      const done = tasks.filter((t) => t.completed).length;
+      setCompletedTasks(done);
+    }
+  }, [tasks, setCompletedTasks]);
 
   const addTask = () => {
     if (input.trim() === "") return;
+
     const newTask = {
       id: Date.now(),
       text: input,
       completed: false,
     };
+
     setTasks([newTask, ...tasks]);
     setInput("");
   };
@@ -56,6 +65,7 @@ const TaskList = () => {
             onChange={(e) => setInput(e.target.value)}
             className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
+
           <button
             onClick={addTask}
             className="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition"

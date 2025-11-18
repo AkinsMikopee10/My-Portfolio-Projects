@@ -7,7 +7,7 @@ const Header = () => {
           🌓
         </button>
         <img
-          src="src/assets/Profile-image.jpg"
+          src="/Profile-image.jpg"
           alt="Profile-Image"
           className="w-9 h-9 rounded-full"
         />
