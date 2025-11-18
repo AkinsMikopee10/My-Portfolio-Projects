@@ -2,6 +2,9 @@
 // A calm, glassmorphism header showing app title and today's date.
 // Later: add a theme toggle icon (Lucide) on the right.
 
+import { Sun, Moon } from "lucide-react";
+import { useState } from "react";
+
 const Header = () => {
   // Format date in a friendly way
   const today = new Date().toLocaleDateString(undefined, {
@@ -10,6 +13,8 @@ const Header = () => {
     month: "short",
     day: "numeric",
   });
+
+  const [dark, setDark] = useState(false);
 
   return (
     <header className="glass-card p-4 flex justify-between items-center">
@@ -27,12 +32,11 @@ const Header = () => {
         <p className="text-white/90">{today}</p>
         {/* Placeholder toggle (we’ll replace with Lucide icon later) */}
         <button
-          aria-label="Toggle theme"
-          className="hidden md:inline-flex items-center justify-center px-3 py-2 rounded-lg bg-white/20 hover:bg-white/30 transition"
+          onClick={() => setDark(!dark)}
+          className="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-white/20 hover:bg-white/30 transition"
           // TODO: hook up dark mode in stretch goals
-          title="Theme"
         >
-          ◐
+          {dark ? <Moon size={18} /> : <Sun size={18} />}
         </button>
       </div>
     </header>

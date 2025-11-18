@@ -3,23 +3,6 @@
 @tailwind utilities;
 
 /* Global body gradient and typography */
-html,
-body,
-#root {
-  height: 100%;
-}
-
 body {
-  /* Muted lavender → sky blue gradient */
-  background: linear-gradient(to bottom right, #667eea, #64b6ff);
-  /* Calm, modern feel */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Reusable glass card utility */
-@layer components {
-  .glass-card {
-    @apply bg-white/20 backdrop-blur-md rounded-xl shadow-soft;
-  }
+  @apply bg-gray-100 text-gray-900 font-sans;
 }

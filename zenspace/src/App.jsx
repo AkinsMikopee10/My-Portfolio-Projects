@@ -1,28 +1,8 @@
-import Header from "./components/Header";
-import MoodTracker from "./components/MoodTracker";
-import BreathingTimer from "./components/BreathingTimer";
-import QuoteCard from "./components/QuoteCard";
-import ReflectionCard from "./components/ReflectionCard";
-
 const App = () => {
   return (
-    <div>
-      <div>
-        {/* Page shell with max width for a dashboard feel */}
-        <Header />
-
-        {/* Top grid: mood, breathing, quotes */}
-        <main>
-          <MoodTracker />
-          <BreathingTimer />
-          <QuoteCard />
-        </main>
-
-        {/* Reflection area spans full width */}
-        <div className="mt-6">
-          <ReflectionCard />
-        </div>
-      </div>
+    <div className="min-h-screen flex flex-col items-center justify-center">
+      <h1 className="text-4xl font-bold text-gray-800">ZenSpace</h1>
+      <p className="text-gray-500 mt-2">Your calm productivity dashboard</p>
     </div>
   );
 };
