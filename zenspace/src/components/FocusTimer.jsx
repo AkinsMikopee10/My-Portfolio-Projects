@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 
-const FocusTimer = () => {
+const FocusTimer = ({ onSessionEnd }) => {
   const [minutes, setMinutes] = useState(25);
   const [seconds, setSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
@@ -14,6 +14,7 @@ const FocusTimer = () => {
             if (minutes === 0) {
               clearInterval(intervalRef.current);
               setIsActive(false);
+              if (onSessionEnd) onSessionEnd(25); // log focus session
               return 0;
             } else {
               setMinutes((prevMinutes) => prevMinutes - 1);
@@ -26,11 +27,9 @@ const FocusTimer = () => {
     }
 
     return () => clearInterval(intervalRef.current);
-  }, [isActive, minutes]);
+  }, [isActive, minutes, onSessionEnd]);
 
-  const handleStartPause = () => {
-    setIsActive(!isActive);
-  };
+  const handleStartPause = () => setIsActive(!isActive);
 
   const handleReset = () => {
     clearInterval(intervalRef.current);
