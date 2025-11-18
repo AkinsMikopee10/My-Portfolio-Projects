@@ -1,4 +1,3 @@
-// QuoteCard.jsx
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
@@ -14,13 +13,13 @@ const QuoteCard = () => {
 
   return (
     <motion.section
-      className="glass-card p-4 text-center"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 1 }}
+      className="bg-white rounded-xl shadow-sm p-4 text-center"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
     >
-      <h2 className="text-lg font-semibold mb-2">Daily Quote</h2>
-      <p className="text-white/90 italic">{quote}</p>
+      <h2 className="text-lg font-semibold mb-2 text-gray-800">Daily Quote</h2>
+      <p className="text-gray-600 italic">{quote}</p>
     </motion.section>
   );
 };

@@ -1,4 +1,3 @@
-// ReflectionCard.jsx
 import { useState, useEffect } from "react";
 
 const ReflectionCard = () => {
@@ -11,8 +10,10 @@ const ReflectionCard = () => {
   }, [reflection]);
 
   return (
-    <section className="glass-card p-4">
-      <h2 className="text-lg font-semibold mb-3">Daily Reflection</h2>
+    <section className="bg-white rounded-xl shadow-sm p-4">
+      <h2 className="text-lg font-semibold mb-3 text-gray-800">
+        Daily Reflection
+      </h2>
       <textarea
         className="w-full p-3 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-300"
         placeholder="Write your thoughts..."
@@ -21,7 +22,7 @@ const ReflectionCard = () => {
         rows={5}
       />
       {reflection && (
-        <p className="mt-2 text-sm text-white/80">
+        <p className="mt-2 text-gray-500 text-sm">
           ✨ You wrote something today!
         </p>
       )}
