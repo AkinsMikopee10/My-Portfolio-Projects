@@ -7,8 +7,8 @@ const Header = () => {
           🌓
         </button>
         <img
-          src="https://i.pravatar.cc/40"
-          alt="https://i.pravatar.cc/40"
+          src="src/assets/Profile-image.jpg"
+          alt="Profile-Image"
           className="w-9 h-9 rounded-full"
         />
       </div>
