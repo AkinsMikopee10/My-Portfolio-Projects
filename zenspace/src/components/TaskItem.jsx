@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTheme } from "../App";
 import { Trash2, Check } from "lucide-react";
 
@@ -41,6 +42,7 @@ const TaskItem = ({ task, onToggle, onDelete }) => {
 
       {/* Task text */}
       <span
+        onClick={() => onToggle(task.id)}
         className={`
           flex-1 text-sm leading-snug transition-all duration-200 cursor-pointer select-none
           ${
@@ -53,12 +55,11 @@ const TaskItem = ({ task, onToggle, onDelete }) => {
                 : "text-zinc-700"
           }
         `}
-        onClick={() => onToggle(task.id)}
       >
         {task.text}
       </span>
 
-      {/* Delete button — visible on hover */}
+      {/* Delete — visible on hover */}
       <button
         onClick={() => onDelete(task.id)}
         aria-label="Delete task"
@@ -78,4 +79,5 @@ const TaskItem = ({ task, onToggle, onDelete }) => {
   );
 };
 
-export default TaskItem;
+// memo prevents re-render unless task object or callbacks change
+export default memo(TaskItem);

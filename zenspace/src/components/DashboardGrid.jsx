@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { useTheme } from "../App";
 import TaskList from "./TaskList";
 import FocusTimer from "./FocusTimer";
@@ -10,12 +10,22 @@ import ReflectionCard from "./ReflectionCard";
 import HabitTracker from "./HabitTracker";
 import { Sparkles } from "lucide-react";
 
+// Memoised so they only re-render when their own props change
+const MemoTaskList = memo(TaskList);
+const MemoFocusTimer = memo(FocusTimer);
+const MemoBreathing = memo(BreathingTimer);
+const MemoMood = memo(MoodTracker);
+const MemoQuote = memo(QuoteCard);
+const MemoReflection = memo(ReflectionCard);
+const MemoHabit = memo(HabitTracker);
+const MemoStats = memo(StatsCard);
+
 const DashboardGrid = () => {
   const { isDark } = useTheme();
   const [completedTasks, setCompletedTasks] = useState(0);
   const [focusMinutes, setFocusMinutes] = useState(0);
 
-  // Load from localStorage
+  // Load from localStorage once on mount
   useEffect(() => {
     const savedTasks = localStorage.getItem("zenspace-tasks");
     if (savedTasks) {
@@ -26,16 +36,21 @@ const DashboardGrid = () => {
     if (savedFocus) setFocusMinutes(parseInt(savedFocus));
   }, []);
 
-  const handleFocusEnd = (minutesFocused) => {
-    const newTotal = focusMinutes + minutesFocused;
-    setFocusMinutes(newTotal);
-    localStorage.setItem("zenspace-focus-minutes", newTotal);
-  };
+  // Stable references — won't cause child re-renders on every DashboardGrid render
+  const handleSetCompletedTasks = useCallback((count) => {
+    setCompletedTasks(count);
+  }, []);
 
-  // Daily progress (out of 5 tasks)
+  const handleFocusEnd = useCallback((minutesFocused) => {
+    setFocusMinutes((prev) => {
+      const newTotal = prev + minutesFocused;
+      localStorage.setItem("zenspace-focus-minutes", newTotal);
+      return newTotal;
+    });
+  }, []);
+
   const progressPct = Math.min((completedTasks / 5) * 100, 100);
 
-  // Greeting based on time of day
   const hour = new Date().getHours();
   const greeting =
     hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
@@ -49,7 +64,7 @@ const DashboardGrid = () => {
       {/* ── Page header ── */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <p className={`zen-label mb-1`}>
+          <p className="zen-label mb-1">
             {new Date().toLocaleDateString("en-US", {
               weekday: "long",
               month: "long",
@@ -73,11 +88,7 @@ const DashboardGrid = () => {
           className={`
             flex items-center gap-3 px-4 py-2.5 rounded-2xl border
             transition-colors duration-300 shrink-0
-            ${
-              isDark
-                ? "bg-zen-800/60 border-zen-700/40"
-                : "bg-white border-zen-200"
-            }
+            ${isDark ? "bg-zen-800/60 border-zen-700/40" : "bg-white border-zen-200"}
           `}
         >
           <Sparkles size={14} className="text-zen-emerald" />
@@ -93,7 +104,6 @@ const DashboardGrid = () => {
               {completedTasks}/5 tasks done
             </p>
           </div>
-          {/* Mini progress bar */}
           <div
             className={`w-20 h-1.5 rounded-full overflow-hidden ${isDark ? "bg-zen-700" : "bg-zen-100"}`}
           >
@@ -112,19 +122,19 @@ const DashboardGrid = () => {
       <section>
         <p className="zen-label mb-3">Overview</p>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          <StatsCard
+          <MemoStats
             title="Tasks Completed"
             value={completedTasks}
             suffix="today"
             accent="emerald"
           />
-          <StatsCard
+          <MemoStats
             title="Focus Time"
             value={focusMinutes}
             suffix="min"
             accent="amber"
           />
-          <StatsCard
+          <MemoStats
             title="Current Streak"
             value="3"
             suffix="days 🔥"
@@ -135,29 +145,29 @@ const DashboardGrid = () => {
         </div>
       </section>
 
-      {/* ── Productivity tools ── */}
+      {/* ── Productivity ── */}
       <section>
         <p className="zen-label mb-3">Productivity</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <TaskList setCompletedTasks={setCompletedTasks} />
-          <FocusTimer onSessionEnd={handleFocusEnd} />
+          <MemoTaskList setCompletedTasks={handleSetCompletedTasks} />
+          <MemoFocusTimer onSessionEnd={handleFocusEnd} />
         </div>
       </section>
 
-      {/* ── Habit Tracker ── */}
+      {/* ── Habits ── */}
       <section>
         <p className="zen-label mb-3">Habits</p>
-        <HabitTracker />
+        <MemoHabit />
       </section>
 
-      {/* ── Wellness tools ── */}
+      {/* ── Wellness ── */}
       <section>
         <p className="zen-label mb-3">Wellness</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <BreathingTimer />
-          <MoodTracker />
-          <QuoteCard />
-          <ReflectionCard />
+          <MemoBreathing />
+          <MemoMood />
+          <MemoQuote />
+          <MemoReflection />
         </div>
       </section>
     </div>

@@ -1,67 +1,72 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "../App";
 import { Wind } from "lucide-react";
 
 // Breathing cycle: 4s inhale, 4s hold, 6s exhale
 const CYCLE = [
-  {
-    label: "Inhale",
-    duration: 4,
-    scale: "scale-150",
-    color: "rgba(16,185,129,0.25)",
-  },
-  {
-    label: "Hold",
-    duration: 4,
-    scale: "scale-150",
-    color: "rgba(16,185,129,0.15)",
-  },
-  {
-    label: "Exhale",
-    duration: 6,
-    scale: "scale-100",
-    color: "rgba(16,185,129,0.08)",
-  },
+  { label: "Inhale", duration: 4 },
+  { label: "Hold", duration: 4 },
+  { label: "Exhale", duration: 6 },
 ];
 const CYCLE_TOTAL = CYCLE.reduce((a, b) => a + b.duration, 0); // 14s
+
+// Derive phase from elapsed seconds (no sub-second precision needed)
+const getPhase = (elapsed) => {
+  const cyclePos = elapsed % CYCLE_TOTAL;
+  let acc = 0;
+  for (let i = 0; i < CYCLE.length; i++) {
+    acc += CYCLE[i].duration;
+    if (cyclePos < acc) {
+      const phaseStart = acc - CYCLE[i].duration;
+      return {
+        index: i,
+        phase: CYCLE[i],
+        remaining: Math.ceil(acc - cyclePos),
+        fraction: (cyclePos - phaseStart) / CYCLE[i].duration,
+      };
+    }
+  }
+  return {
+    index: 0,
+    phase: CYCLE[0],
+    remaining: CYCLE[0].duration,
+    fraction: 0,
+  };
+};
 
 const BreathingTimer = () => {
   const { isDark } = useTheme();
   const [isActive, setIsActive] = useState(false);
-  const [elapsed, setElapsed] = useState(0); // seconds total
-  const [phaseProgress, setPhaseProgress] = useState(0); // 0-1 within current phase
+  const [elapsed, setElapsed] = useState(0); // whole seconds only
   const intervalRef = useRef(null);
 
-  // Determine current phase from elapsed time
-  const cyclePos = elapsed % CYCLE_TOTAL;
-  let phaseIdx = 0;
-  let acc = 0;
-  for (let i = 0; i < CYCLE.length; i++) {
-    if (cyclePos < acc + CYCLE[i].duration) {
-      phaseIdx = i;
-      break;
-    }
-    acc += CYCLE[i].duration;
-  }
-  const phase = CYCLE[phaseIdx];
-  const phaseElapsed = cyclePos - acc;
-  const phaseFraction = phaseElapsed / phase.duration;
-
+  // Tick once per second — was 10x/sec before
   useEffect(() => {
     if (!isActive) return;
     intervalRef.current = setInterval(() => {
-      setElapsed((prev) => prev + 0.1);
-    }, 100);
+      setElapsed((prev) => prev + 1);
+    }, 1000);
     return () => clearInterval(intervalRef.current);
   }, [isActive]);
 
-  const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
-  const ss = String(Math.floor(elapsed % 60)).padStart(2, "0");
+  const handleToggle = useCallback(() => {
+    setIsActive((prev) => !prev);
+  }, []);
 
-  // Orb scale interpolation
-  const fromScale = phaseIdx === 0 ? 1 : phaseIdx === 2 ? 1.5 : 1.5;
-  const toScale = phaseIdx === 0 ? 1.5 : phaseIdx === 2 ? 1 : 1.5;
-  const currentScale = fromScale + (toScale - fromScale) * phaseFraction;
+  const handleReset = useCallback(() => {
+    setIsActive(false);
+    setElapsed(0);
+  }, []);
+
+  const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
+  const ss = String(elapsed % 60).padStart(2, "0");
+
+  const { index: phaseIdx, phase, remaining, fraction } = getPhase(elapsed);
+
+  // Orb scale: inhale 1→1.5, hold stays 1.5, exhale 1.5→1
+  const fromScale = phaseIdx === 0 ? 1 : 1.5;
+  const toScale = phaseIdx === 2 ? 1 : 1.5;
+  const orbScale = isActive ? fromScale + (toScale - fromScale) * fraction : 1;
 
   return (
     <div className="zen-card p-5 flex flex-col gap-4 animate-slide-up">
@@ -74,27 +79,29 @@ const BreathingTimer = () => {
       {/* Orb */}
       <div className="flex flex-col items-center gap-3 py-2">
         <div className="relative w-28 h-28 flex items-center justify-center">
-          {/* Outer ring glow */}
+          {/* Ambient glow */}
           <div
-            className="absolute inset-0 rounded-full transition-all duration-300"
+            className="absolute inset-0 rounded-full transition-opacity duration-1000"
             style={{
-              background: `radial-gradient(circle, ${phase.color} 0%, transparent 70%)`,
-              transform: `scale(${isActive ? currentScale : 1})`,
-              transition: "transform 0.4s ease, background 1s ease",
+              background:
+                "radial-gradient(circle, rgba(16,185,129,0.18) 0%, transparent 70%)",
+              opacity: isActive ? 1 : 0.3,
+              transform: `scale(${orbScale})`,
+              transition: `transform ${phase.duration}s ease-in-out, opacity 1s ease`,
             }}
           />
           {/* Core orb */}
           <div
-            className="relative rounded-full flex items-center justify-center transition-all ease-in-out"
+            className="relative rounded-full"
             style={{
-              width: "60px",
-              height: "60px",
+              width: "56px",
+              height: "56px",
               background: isDark
-                ? "radial-gradient(circle at 35% 35%, rgba(16,185,129,0.6), rgba(16,185,129,0.2))"
-                : "radial-gradient(circle at 35% 35%, rgba(16,185,129,0.8), rgba(16,185,129,0.3))",
-              transform: `scale(${isActive ? currentScale : 1})`,
+                ? "radial-gradient(circle at 35% 35%, rgba(16,185,129,0.7), rgba(16,185,129,0.25))"
+                : "radial-gradient(circle at 35% 35%, rgba(16,185,129,0.9), rgba(16,185,129,0.4))",
+              transform: `scale(${orbScale})`,
               transition: `transform ${phase.duration}s ease-in-out`,
-              boxShadow: "0 0 24px rgba(16,185,129,0.3)",
+              boxShadow: "0 0 20px rgba(16,185,129,0.3)",
             }}
           />
         </div>
@@ -111,7 +118,7 @@ const BreathingTimer = () => {
               <p
                 className={`text-xs mt-0.5 ${isDark ? "text-zen-muted" : "text-zinc-400"}`}
               >
-                {Math.ceil(phase.duration - phaseElapsed)}s
+                {remaining}s
               </p>
             </>
           ) : (
@@ -123,7 +130,7 @@ const BreathingTimer = () => {
           )}
         </div>
 
-        {/* Phase progress dots */}
+        {/* Phase dots */}
         {isActive && (
           <div className="flex gap-1.5">
             {CYCLE.map((c, i) => (
@@ -140,7 +147,7 @@ const BreathingTimer = () => {
         )}
       </div>
 
-      {/* Timer + button */}
+      {/* Controls */}
       <div className="flex items-center justify-between">
         <span
           className={`text-xs tabular-nums font-medium ${isDark ? "text-zen-muted" : "text-zinc-400"}`}
@@ -148,15 +155,7 @@ const BreathingTimer = () => {
           {mm}:{ss}
         </span>
         <button
-          onClick={() => {
-            if (isActive) {
-              setIsActive(false);
-            } else {
-              if (elapsed === 0 || !isActive) {
-                setIsActive(true);
-              }
-            }
-          }}
+          onClick={handleToggle}
           className={`zen-btn-primary text-xs py-1.5 px-4
             ${isActive ? "!bg-amber-500 hover:!bg-amber-600" : ""}`}
         >
@@ -164,10 +163,7 @@ const BreathingTimer = () => {
         </button>
         {elapsed > 0 && !isActive && (
           <button
-            onClick={() => {
-              setElapsed(0);
-              setIsActive(false);
-            }}
+            onClick={handleReset}
             className={`text-xs ${isDark ? "text-zen-muted hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-600"} transition-colors`}
           >
             Reset

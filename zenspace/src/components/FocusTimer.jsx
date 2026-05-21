@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { useTheme } from "../App";
 import { Play, Pause, RotateCcw, Timer } from "lucide-react";
 
@@ -8,17 +8,21 @@ const PRESETS = [
   { label: "Long break", minutes: 15 },
 ];
 
-const TOTAL_SECONDS = (m) => m * 60;
+const RING_COLORS = ["#10b981", "#f59e0b", "#6366f1"];
 
 const FocusTimer = ({ onSessionEnd }) => {
   const { isDark } = useTheme();
-  const [preset, setPreset] = useState(0); // index into PRESETS
-  const [totalSecs, setTotalSecs] = useState(TOTAL_SECONDS(25));
-  const [remaining, setRemaining] = useState(TOTAL_SECONDS(25));
+  const [preset, setPreset] = useState(0);
+  const [totalSecs, setTotalSecs] = useState(25 * 60);
+  const [remaining, setRemaining] = useState(25 * 60);
   const [isActive, setIsActive] = useState(false);
   const intervalRef = useRef(null);
+  // Keep a ref to onSessionEnd to avoid stale closure without re-creating interval
+  const onSessionEndRef = useRef(onSessionEnd);
+  useEffect(() => {
+    onSessionEndRef.current = onSessionEnd;
+  }, [onSessionEnd]);
 
-  // tick
   useEffect(() => {
     if (!isActive) return;
     intervalRef.current = setInterval(() => {
@@ -26,51 +30,43 @@ const FocusTimer = ({ onSessionEnd }) => {
         if (prev <= 1) {
           clearInterval(intervalRef.current);
           setIsActive(false);
-          if (onSessionEnd) onSessionEnd(PRESETS[preset].minutes);
+          onSessionEndRef.current?.(PRESETS[preset].minutes);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(intervalRef.current);
-  }, [isActive, onSessionEnd, preset]);
+  }, [isActive, preset]); // preset needed so completed session logs correct duration
 
-  const handlePreset = (idx) => {
+  const handlePreset = useCallback((idx) => {
     clearInterval(intervalRef.current);
     setIsActive(false);
     setPreset(idx);
-    const secs = TOTAL_SECONDS(PRESETS[idx].minutes);
+    const secs = PRESETS[idx].minutes * 60;
     setTotalSecs(secs);
     setRemaining(secs);
-  };
+  }, []);
 
-  const handleStartPause = () => setIsActive((p) => !p);
+  const handleStartPause = useCallback(() => setIsActive((p) => !p), []);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     clearInterval(intervalRef.current);
     setIsActive(false);
     setRemaining(totalSecs);
-  };
+  }, [totalSecs]);
 
   const mins = Math.floor(remaining / 60);
   const secs = remaining % 60;
   const fmt = (n) => String(n).padStart(2, "0");
 
-  // SVG ring
   const RADIUS = 54;
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-  const progress = remaining / totalSecs;
-  const strokeDashoffset = CIRCUMFERENCE * (1 - progress);
-
-  const ringColor =
-    preset === 0
-      ? "#10b981" // emerald — focus
-      : preset === 1
-        ? "#f59e0b" // amber — short break
-        : "#6366f1"; // indigo — long break
+  const strokeDashoffset = CIRCUMFERENCE * (1 - remaining / totalSecs);
+  const ringColor = RING_COLORS[preset];
 
   return (
-    <div className={`zen-card p-5 flex flex-col gap-4 animate-slide-up`}>
+    <div className="zen-card p-5 flex flex-col gap-4 animate-slide-up">
       {/* Header */}
       <div className="flex items-center gap-2">
         <Timer size={16} className="text-zen-emerald" />
@@ -101,17 +97,14 @@ const FocusTimer = ({ onSessionEnd }) => {
         ))}
       </div>
 
-      {/* Ring + time */}
+      {/* Ring */}
       <div className="flex flex-col items-center gap-1 py-2">
         <div className="relative w-36 h-36">
-          {/* Glow */}
           <div
-            className="absolute inset-4 rounded-full blur-xl opacity-20 transition-colors duration-500"
+            className="absolute inset-4 rounded-full blur-xl opacity-20"
             style={{ backgroundColor: ringColor }}
           />
-
           <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-            {/* Track */}
             <circle
               cx="60"
               cy="60"
@@ -120,7 +113,6 @@ const FocusTimer = ({ onSessionEnd }) => {
               stroke={isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.07)"}
               strokeWidth="6"
             />
-            {/* Progress */}
             <circle
               cx="60"
               cy="60"
@@ -131,11 +123,9 @@ const FocusTimer = ({ onSessionEnd }) => {
               strokeLinecap="round"
               strokeDasharray={CIRCUMFERENCE}
               strokeDashoffset={strokeDashoffset}
-              className="transition-all duration-1000 ease-linear"
+              style={{ transition: "stroke-dashoffset 1s linear" }}
             />
           </svg>
-
-          {/* Time display */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span
               className={`font-display text-3xl font-medium tabular-nums leading-none
@@ -170,11 +160,10 @@ const FocusTimer = ({ onSessionEnd }) => {
         >
           <RotateCcw size={14} />
         </button>
-
         <button
           onClick={handleStartPause}
           className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium text-sm text-white
-            transition-all duration-200 active:scale-95 shadow-lg"
+            transition-all duration-200 active:scale-95"
           style={{
             backgroundColor: ringColor,
             boxShadow: `0 4px 16px ${ringColor}40`,
@@ -188,4 +177,4 @@ const FocusTimer = ({ onSessionEnd }) => {
   );
 };
 
-export default FocusTimer;
+export default memo(FocusTimer);

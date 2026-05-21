@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import TaskItem from "./TaskItem";
 import { useTheme } from "../App";
 import { Plus, ClipboardList } from "lucide-react";
@@ -11,44 +11,41 @@ const TaskList = ({ setCompletedTasks }) => {
   });
   const [input, setInput] = useState("");
 
+  // Sync to localStorage and notify parent — only when tasks actually change
   useEffect(() => {
     localStorage.setItem("zenspace-tasks", JSON.stringify(tasks));
-    if (setCompletedTasks) {
-      setCompletedTasks(tasks.filter((t) => t.completed).length);
-    }
-  }, [tasks, setCompletedTasks]);
+    setCompletedTasks?.(tasks.filter((t) => t.completed).length);
+  }, [tasks]); // intentionally omit setCompletedTasks — it's stable via useCallback in parent
 
-  const addTask = () => {
+  const addTask = useCallback(() => {
     if (!input.trim()) return;
-    setTasks([
+    setTasks((prev) => [
       { id: Date.now(), text: input.trim(), completed: false },
-      ...tasks,
+      ...prev,
     ]);
     setInput("");
-  };
+  }, [input]);
 
-  const toggleTask = (id) =>
-    setTasks(
-      tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
+  const toggleTask = useCallback((id) => {
+    setTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
     );
+  }, []);
 
-  const deleteTask = (id) => setTasks(tasks.filter((t) => t.id !== id));
+  const deleteTask = useCallback((id) => {
+    setTasks((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
-  const pending = tasks.filter((t) => !t.completed).length;
   const done = tasks.filter((t) => t.completed).length;
+  const pending = tasks.length - done;
 
   return (
-    <div
-      className={`
-        zen-card p-5 flex flex-col gap-4 animate-slide-up
-        ${isDark ? "" : ""}
-      `}
-    >
+    <div className="zen-card p-5 flex flex-col gap-4 animate-slide-up">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <ClipboardList size={16} className="text-zen-emerald" />
-          <h2 className={`zen-heading text-base`}>Today's Tasks</h2>
+          <h2 className="zen-heading text-base">Today's Tasks</h2>
         </div>
         <div className="flex items-center gap-2">
           {pending > 0 && (
@@ -131,9 +128,7 @@ const TaskList = ({ setCompletedTasks }) => {
           >
             <div
               className="h-full rounded-full bg-zen-emerald transition-all duration-700"
-              style={{
-                width: `${tasks.length ? (done / tasks.length) * 100 : 0}%`,
-              }}
+              style={{ width: `${(done / tasks.length) * 100}%` }}
             />
           </div>
           <p
