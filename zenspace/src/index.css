@@ -2,7 +2,134 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global body gradient and typography */
-body {
-  @apply bg-gradient-to-br from-indigo-400 via-purple-300 to-pink-200 min-h-screen font-sans;
+/* ─── Base resets & typography ─── */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    @apply box-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply font-sans antialiased transition-colors duration-300;
+    /* Dark mode default */
+    @apply bg-zen-900 text-zen-50;
+    background-image:
+      radial-gradient(
+        ellipse at 20% 50%,
+        rgba(16, 185, 129, 0.06) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse at 80% 20%,
+        rgba(245, 158, 11, 0.05) 0%,
+        transparent 60%
+      );
+    min-height: 100vh;
+  }
+
+  /* Light mode body */
+  html.light body {
+    @apply bg-zen-50 text-zen-900;
+    background-image:
+      radial-gradient(
+        ellipse at 20% 50%,
+        rgba(16, 185, 129, 0.08) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse at 80% 20%,
+        rgba(245, 158, 11, 0.06) 0%,
+        transparent 60%
+      );
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-zen-900;
+  }
+
+  html.light ::-webkit-scrollbar-track {
+    @apply bg-zen-100;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-zen-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-zen-emerald;
+  }
+}
+
+/* ─── Reusable component classes ─── */
+@layer components {
+  /* Glass card — dark */
+  .zen-card {
+    @apply bg-zen-800/80 backdrop-blur-md border border-zen-700/60 rounded-2xl shadow-zen-card;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  /* Glass card — light */
+  html.light .zen-card {
+    @apply bg-white/80 border-zen-200/80 shadow-zen-card-light;
+  }
+
+  .zen-card:hover {
+    @apply border-zen-emerald/30 shadow-zen-glow-emerald;
+  }
+
+  /* Emerald accent button */
+  .zen-btn-primary {
+    @apply bg-zen-emerald hover:bg-zen-emeraldDim text-white font-medium text-sm
+           px-4 py-2 rounded-xl transition-all duration-200 active:scale-95;
+  }
+
+  /* Ghost button */
+  .zen-btn-ghost {
+    @apply text-zen-mutedLight hover:text-zen-50 hover:bg-zen-700/50
+           text-sm font-medium px-3 py-2 rounded-xl transition-all duration-200;
+  }
+
+  html.light .zen-btn-ghost {
+    @apply hover:text-zen-900 hover:bg-zen-100;
+  }
+
+  /* Section heading */
+  .zen-heading {
+    @apply font-display text-xl text-zen-50 font-medium;
+  }
+
+  html.light .zen-heading {
+    @apply text-zen-900;
+  }
+
+  /* Subtle label */
+  .zen-label {
+    @apply text-xs font-medium tracking-widest uppercase text-zen-muted;
+  }
+
+  /* Noise texture overlay for depth */
+  .zen-noise::before {
+    content: "";
+    @apply absolute inset-0 rounded-2xl pointer-events-none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    opacity: 0.4;
+  }
 }
